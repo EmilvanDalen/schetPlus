@@ -6,7 +6,6 @@ public class Schets
 {
     private Bitmap bitmap;
 
-    private int test;
         
     public Schets()
     {
