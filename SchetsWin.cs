@@ -39,6 +39,8 @@ public class SchetsWin : Form
                                 , new LijnTool()
                                 , new RechthoekTool()
                                 , new VolRechthoekTool()
+                                , new CirkelTool()
+                                , new SchijfTool()
                                 , new TekstTool()
                                 , new GumTool()
                                 };
