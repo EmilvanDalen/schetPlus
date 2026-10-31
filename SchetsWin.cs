@@ -33,6 +33,29 @@ public class SchetsWin : Form
         this.Close();
     }
 
+    private void opslaan(object o, EventArgs ea)
+    {
+        if (Text == "")
+            opslaanAls(o, ea);
+        else opslaanDoorsturen();
+    }
+    private void opslaanAls(object o, EventArgs ea)
+    {
+        SaveFileDialog dialoog = new SaveFileDialog();
+        dialoog.Filter = "Png|*.Png|Jpg|*.Jpg*|Bm[|*.Bmp*";
+        dialoog.Title = "plaatje opslaan als...";
+        if (dialoog.ShowDialog() == DialogResult.OK)
+        {
+            Text = dialoog.FileName;
+            opslaanDoorsturen();
+        }
+    }
+    private void opslaanDoorsturen()
+    {
+        schetscontrol.schets.opslaan(Text);
+
+    }
+
     public SchetsWin()
     {
         ISchetsTool[] deTools = { new PenTool()         
@@ -86,6 +109,8 @@ public class SchetsWin : Form
         ToolStripMenuItem menu = new ToolStripMenuItem("File");
         menu.MergeAction = MergeAction.MatchOnly;
         menu.DropDownItems.Add("Sluiten", null, this.afsluiten);
+        menu.DropDownItems.Add("oplsaan", null, this.opslaan);
+        menu.DropDownItems.Add("oplsaan als", null, this.opslaanAls);
         menuStrip.Items.Add(menu);
     }
 

@@ -5,7 +5,7 @@ using System.Windows.Forms;
 
 public class SchetsControl : UserControl
 {   
-    private Schets schets;
+    public Schets schets;
     private Color penkleur;
 
     public Color PenKleur
@@ -13,6 +13,7 @@ public class SchetsControl : UserControl
     }
     public Schets Schets
     { get { return schets;   }
+
     }
     public SchetsControl()
     {   this.BorderStyle = BorderStyle.Fixed3D;

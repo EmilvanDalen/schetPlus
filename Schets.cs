@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
+using System.Windows.Forms;
 
 public class Schets
 {
@@ -40,5 +42,9 @@ public class Schets
     public void Roteer()
     {
         bitmap.RotateFlip(RotateFlipType.Rotate90FlipNone);
+    }
+    public void opslaan(string naam)
+    {
+        bitmap.Save(naam);
     }
 }
