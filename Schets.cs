@@ -6,10 +6,13 @@ public class Schets
 {
     private Bitmap bitmap;
 
+    public List<SchetsObject> schetsobjecten;
+
         
     public Schets()
     {
         bitmap = new Bitmap(1, 1);
+        schetsobjecten = new List<SchetsObject>();
     }
     public Graphics BitmapGraphics
     {
@@ -32,6 +35,18 @@ public class Schets
     {
         gr.DrawImage(bitmap, 0, 0);
     }
+
+    public void TekenViaLijst()
+    {
+        Bitmap nieuw = new Bitmap(this.bitmap.Size.Width
+                                     , this.bitmap.Size.Height
+                                     );
+        Graphics gr = Graphics.FromImage(nieuw);
+        gr.FillRectangle(Brushes.White, 0, 0, this.bitmap.Size.Width, this.bitmap.Size.Height);
+        for (int i = 0; i < this.schetsobjecten.Count; i++) schetsobjecten[i].teken(gr);
+        bitmap = nieuw;
+    }
+
     public void Schoon()
     {
         Graphics gr = Graphics.FromImage(bitmap);
