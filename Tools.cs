@@ -1,6 +1,7 @@
 using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Security.Cryptography.X509Certificates;
 
 public interface ISchetsTool
 {
@@ -38,11 +39,13 @@ public class TekstTool : StartpuntTool
             Graphics gr = s.MaakBitmapGraphics();
             Font font = new Font("Tahoma", 40);
             string tekst = c.ToString();
+
             SizeF sz = 
             gr.MeasureString(tekst, font, this.startpunt, StringFormat.GenericTypographic);
             gr.DrawString   (tekst, font, kwast, 
                                             this.startpunt, StringFormat.GenericTypographic);
-            // gr.DrawRectangle(Pens.Black, startpunt.X, startpunt.Y, sz.Width, sz.Height);
+            //gr.DrawRectangle(Pens.Black, startpunt.X, startpunt.Y, sz.Width, sz.Height);
+            s.Schets.schetsobjecten.Add(new TekstObject(tekst, startpunt, new Point(startpunt.X+(int)sz.Width, startpunt.Y+(int)sz.Height), kwast));
             startpunt.X += (int)sz.Width;
             s.Invalidate();
         }
@@ -72,6 +75,7 @@ public abstract class TweepuntTool : StartpuntTool
     }
     public override void MuisLos(SchetsControl s, Point p)
     {   base.MuisLos(s, p);
+        s.Schets.schetsobjecten.Add(maakSchetsObject(this.startpunt, p));
         this.Compleet(s.MaakBitmapGraphics(), this.startpunt, p);
         s.Invalidate();
     }
@@ -79,6 +83,7 @@ public abstract class TweepuntTool : StartpuntTool
     {
     }
     public abstract void Bezig(Graphics g, Point p1, Point p2);
+    public abstract SchetsObject maakSchetsObject(Point p1, Point p2);
         
     public virtual void Compleet(Graphics g, Point p1, Point p2)
     {   this.Bezig(g, p1, p2);
@@ -91,6 +96,11 @@ public class RechthoekTool : TweepuntTool
 
     public override void Bezig(Graphics g, Point p1, Point p2)
     {   g.DrawRectangle(MaakPen(kwast,3), TweepuntTool.Punten2Rechthoek(p1, p2));
+    }
+
+    public override SchetsObject maakSchetsObject(Point p1, Point p2)
+    {
+        return new RandRechthoekObject(p1, p2, kwast);
     }
 }
 
@@ -105,6 +115,10 @@ public class CirkelTool : TweepuntTool
     {
         g.DrawEllipse(MaakPen(kwast, 3), TweepuntTool.Punten2Rechthoek(p1, p2));
     }
+    public override SchetsObject maakSchetsObject(Point p1, Point p2)
+    {
+        return new EllipsObject(p1, p2, kwast);
+    }
 }
 
 public class VolRechthoekTool : RechthoekTool
@@ -113,6 +127,10 @@ public class VolRechthoekTool : RechthoekTool
 
     public override void Compleet(Graphics g, Point p1, Point p2)
     {   g.FillRectangle(kwast, TweepuntTool.Punten2Rechthoek(p1, p2));
+    }
+    public override SchetsObject maakSchetsObject(Point p1, Point p2)
+    {
+        return new VolRechthoekObject(p1, p2, kwast);
     }
 }
 
@@ -127,6 +145,10 @@ public class SchijfTool : CirkelTool
     {
         g.FillEllipse(kwast, TweepuntTool.Punten2Rechthoek(p1, p2));
     }
+    public override SchetsObject maakSchetsObject(Point p1, Point p2)
+    {
+        return new SchijfObject(p1, p2, kwast);
+    }
 }
 
 public class LijnTool : TweepuntTool
@@ -135,6 +157,10 @@ public class LijnTool : TweepuntTool
 
     public override void Bezig(Graphics g, Point p1, Point p2)
     {   g.DrawLine(MaakPen(this.kwast,3), p1, p2);
+    }
+    public override SchetsObject maakSchetsObject(Point p1, Point p2)
+    {
+        return new LijnObject(p1, p2, kwast);
     }
 }
 
@@ -147,12 +173,31 @@ public class PenTool : LijnTool
         this.MuisVast(s, p);
     }
 }
-    
-public class GumTool : PenTool
+
+public class GumTool : StartpuntTool
 {
     public override string ToString() { return "gum"; }
 
-    public override void Bezig(Graphics g, Point p1, Point p2)
-    {   g.DrawLine(MaakPen(Brushes.White, 7), p1, p2);
+    public override void Letter(SchetsControl s, char c)
+    {
+    }
+    public override void MuisDrag(SchetsControl s, Point p)
+    {
+        this.MuisLos(s, p);
+        this.MuisVast(s, p);
+    }
+    public override void MuisLos(SchetsControl s, Point p)
+    {
+        int i = s.Schets.schetsobjecten.Count - 1;
+        while (i >= 0 && ! s.Schets.schetsobjecten[i].raak(p))
+        {
+            i--;
+        }
+        if (i >= 0)
+        {
+            s.Schets.schetsobjecten.RemoveAt(i);
+            s.Schets.TekenViaLijst();
+            s.Invalidate();
+        }
     }
 }
