@@ -1,11 +1,12 @@
 using System;
+using System.Diagnostics;
+using System.Diagnostics.Tracing;
 using System.Drawing;
 using System.Windows.Forms;
 
 public class SchetsEditor : Form
 {
     private MenuStrip menuStrip;
-
     public SchetsEditor()
     {   
         this.ClientSize = new Size(800, 600);
@@ -22,6 +23,7 @@ public class SchetsEditor : Form
         ToolStripDropDownItem menu = new ToolStripMenuItem("File");
         menu.DropDownItems.Add("Nieuw", null, this.nieuw);
         menu.DropDownItems.Add("Exit", null, this.afsluiten);
+        menu.DropDownItems.Add("Openen", null, this.bestand_openen);
         menuStrip.Items.Add(menu);
     }
     private void maakHelpMenu()
@@ -45,8 +47,31 @@ public class SchetsEditor : Form
         s.MdiParent = this;
         s.Show();
     }
+    private void nieuw(object sender,EventArgs e,string naam)
+    {
+        SchetsWin s = new SchetsWin();
+        s.MdiParent = this;
+        s.Text = naam;
+        s.Show();
+        //dit heeft een bad smell, maar ik heb per sé schetswin s nodig om een bestand te openen
+    
+        using (Image img = Image.FromFile(naam))
+        {
+            s.schetscontrol.schets.bitmap = new Bitmap(img);
+        }
+        
+    }
     private void afsluiten(object sender, EventArgs e)
     {   
         this.Close();
+    }
+    private void bestand_openen(object sender, EventArgs e)
+
+    {
+        OpenFileDialog dialoog = new OpenFileDialog();
+        dialoog.Filter = "Alle files|*.*";
+        dialoog.Title = "Tekst openen...";
+        if (dialoog.ShowDialog() == DialogResult.OK)
+            nieuw(sender, e, dialoog.FileName);
     }
 }

@@ -6,7 +6,7 @@ using System.Windows.Forms;
 
 public class Schets
 {
-    private Bitmap bitmap;
+    public Bitmap bitmap;
 
     public List<SchetsObject> schetsobjecten;
 
@@ -59,7 +59,9 @@ public class Schets
         bitmap.RotateFlip(RotateFlipType.Rotate90FlipNone);
     }
     public void opslaan(string naam)
-    {
-        bitmap.Save(naam);
+    {   
+
+        bitmap.Save(naam);  
     }
+
 }

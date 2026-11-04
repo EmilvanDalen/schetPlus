@@ -6,7 +6,7 @@ using System.Windows.Forms;
 public class SchetsWin : Form
 {   
     MenuStrip menuStrip;
-    SchetsControl schetscontrol;
+    public SchetsControl schetscontrol;
     ISchetsTool huidigeTool;
     Panel paneel;
     bool vast;
@@ -37,7 +37,7 @@ public class SchetsWin : Form
     {
         if (Text == "")
             opslaanAls(o, ea);
-        else opslaanDoorsturen();
+        else opslaanDoorsturen(o,ea);
     }
     private void opslaanAls(object o, EventArgs ea)
     {
@@ -47,13 +47,12 @@ public class SchetsWin : Form
         if (dialoog.ShowDialog() == DialogResult.OK)
         {
             Text = dialoog.FileName;
-            opslaanDoorsturen();
+            opslaanDoorsturen(o,ea);
         }
     }
-    private void opslaanDoorsturen()
+    private void opslaanDoorsturen(object o, EventArgs ea)
     {
         schetscontrol.schets.opslaan(Text);
-
     }
 
     public SchetsWin()
@@ -109,8 +108,8 @@ public class SchetsWin : Form
         ToolStripMenuItem menu = new ToolStripMenuItem("File");
         menu.MergeAction = MergeAction.MatchOnly;
         menu.DropDownItems.Add("Sluiten", null, this.afsluiten);
-        menu.DropDownItems.Add("oplsaan", null, this.opslaan);
-        menu.DropDownItems.Add("oplsaan als", null, this.opslaanAls);
+        menu.DropDownItems.Add("opslaan", null, this.opslaan);
+        menu.DropDownItems.Add("opslaan als", null, this.opslaanAls);
         menuStrip.Items.Add(menu);
     }
 
