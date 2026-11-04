@@ -8,10 +8,29 @@ public abstract class SchetsObject
 {
     public Point startpunt;
     public Point eindpunt;
+    public string type = "";
 
-    public Brush kwast;
+    public Color kleur;
     public abstract void teken(Graphics g);
     public abstract bool raak(Point p);
+
+    public virtual string toString()
+    {
+        int x0 = startpunt.X;
+        int y0 = startpunt.Y;
+        int x1 = eindpunt.X;
+        int y1 = eindpunt.Y;
+        int r = kleur.R;
+        int g = kleur.G;
+        int b = kleur.B;
+        return $"{type} {x0} {y0} {x1} {y1} {r} {g} {b}";
+    }
+
+    //deze roteerfunctie moet nog maar heb ik nu niet zo'n zin in
+    public void Rotate(Size schetsSize)
+    {
+        int x0 = 0;
+    }
 }
 
 public class TekstObject : SchetsObject
@@ -20,17 +39,23 @@ public class TekstObject : SchetsObject
 
     public Font font;
 
-    public TekstObject(string s, Point startp, Point eindp, Brush b)
+    public TekstObject(string s, Point startp, Point eindp, Color col)
     {
         tekst = s;
         this.startpunt = startp;
         this.eindpunt = eindp;
-        this.kwast = b;
+        this.kleur = col;
         this.font = new Font("Tahoma", 40);
+        type = "tekst";
+    }
+    public override string toString()
+    {
+        string str = base.toString();
+        return str + " " + tekst;
     }
     public override void teken(Graphics g)
     { 
-        g.DrawString(tekst, font, kwast, this.startpunt, StringFormat.GenericTypographic);
+        g.DrawString(tekst, font, new SolidBrush(kleur), this.startpunt, StringFormat.GenericTypographic);
        
     }
 
@@ -44,16 +69,17 @@ public class LijnObject : SchetsObject //De hierarchie is hier anders! Voor alle
     // wil je het liefst dat startpunt de linkerbovenhoek is en eindpunt de rechteronderhoek, daar is namelijk makkelijker mee te werken
     // maar bij lijnobject gaat dan waardevolle informatie verloren, dus die moet apart
 {
-    public LijnObject(Point p1, Point p2, Brush b)
+    public LijnObject(Point p1, Point p2, Color col)
     {
         startpunt = p1;
         eindpunt = p2;
-        kwast = b;
+        kleur = col;
+        type = "lijn";
     }
 
     public override void teken(Graphics g)
     {
-        g.DrawLine(TweepuntTool.MaakPen(kwast, 3), startpunt, eindpunt);
+        g.DrawLine(new Pen(kleur, 3), startpunt, eindpunt);
     }
 
     public double afstandTotLijn(Point p) //tijd voor wiskunde! :D credits naar Wikipedia (altijd)
@@ -75,22 +101,22 @@ public class LijnObject : SchetsObject //De hierarchie is hier anders! Voor alle
 public abstract class VlakObject : SchetsObject
 {
     public Point middelpunt;
-    public VlakObject(Point p1, Point p2, Brush b)
+    public VlakObject(Point p1, Point p2, Color col)
     {
         startpunt = new Point(Math.Min(p1.X, p2.X), Math.Min(p1.Y, p2.Y));
         eindpunt = new Point(Math.Max(p1.X, p2.X), Math.Max(p1.Y, p2.Y));
         middelpunt = new Point((p1.X + p2.X) / 2, (p1.Y + p2.Y) / 2);
-        kwast = b;
+        kleur = col;
     }
 }
 
 public class VolRechthoekObject : VlakObject
 {
-    public VolRechthoekObject(Point p1, Point p2, Brush b) : base(p1, p2, b)
-    {}
+    public VolRechthoekObject(Point p1, Point p2, Color col) : base(p1, p2, col)
+    { type = "volRechthoek"; }
     public override void teken(Graphics g)
     {
-        g.FillRectangle(kwast, TweepuntTool.Punten2Rechthoek(startpunt, eindpunt));
+        g.FillRectangle(new SolidBrush(kleur), TweepuntTool.Punten2Rechthoek(startpunt, eindpunt));
     }
     
     public override bool raak(Point p)
@@ -102,11 +128,11 @@ public class VolRechthoekObject : VlakObject
 
 public class RandRechthoekObject : VlakObject
 {
-    public RandRechthoekObject(Point p1, Point p2, Brush b) : base(p1, p2, b)
-    { }
+    public RandRechthoekObject(Point p1, Point p2, Color col) : base(p1, p2, col)
+    { type = "randRechthoek"; }
     public override void teken(Graphics g)
     {
-        g.DrawRectangle(TweepuntTool.MaakPen(kwast,3), TweepuntTool.Punten2Rechthoek(startpunt, eindpunt)); //waarom moeilijk doen als je ook Jeroen's code kan hergebruiken :)
+        g.DrawRectangle(new Pen(kleur, 3), TweepuntTool.Punten2Rechthoek(startpunt, eindpunt)); //waarom moeilijk doen als je ook Jeroen's code kan hergebruiken :)
     }
 
     public override bool raak(Point p)
@@ -118,12 +144,12 @@ public class RandRechthoekObject : VlakObject
 
 public class SchijfObject : VlakObject
 {
-    public SchijfObject(Point p1, Point p2, Brush b) : base(p1, p2, b)
-    { }
+    public SchijfObject(Point p1, Point p2, Color col) : base(p1, p2, col)
+    { type = "schijf"; }
 
     public override void teken(Graphics g)
     {
-        g.FillEllipse(kwast, TweepuntTool.Punten2Rechthoek(startpunt, eindpunt));
+        g.FillEllipse(new SolidBrush(kleur), TweepuntTool.Punten2Rechthoek(startpunt, eindpunt));
     }
 
     public static bool puntInEllips(Point midp, Point eindp, Point p) //meer wiskunde :D ook van wikipedia, de reden dat deze functie een aparte static functie is, is om 'm
@@ -142,12 +168,12 @@ public class SchijfObject : VlakObject
 
 public class EllipsObject : VlakObject
 {
-    public EllipsObject(Point p1, Point p2, Brush b) : base(p1, p2, b)
-    { }
+    public EllipsObject(Point p1, Point p2, Color col) : base(p1, p2, col)
+    { type = "ellips";  }
 
     public override void teken(Graphics g)
     {
-        g.DrawEllipse(TweepuntTool.MaakPen(kwast, 3), TweepuntTool.Punten2Rechthoek(startpunt, eindpunt));
+        g.DrawEllipse(new Pen(kleur, 3), TweepuntTool.Punten2Rechthoek(startpunt, eindpunt));
     }
 
     public override bool raak(Point p)

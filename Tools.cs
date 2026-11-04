@@ -45,7 +45,7 @@ public class TekstTool : StartpuntTool
             gr.DrawString   (tekst, font, kwast, 
                                             this.startpunt, StringFormat.GenericTypographic);
             //gr.DrawRectangle(Pens.Black, startpunt.X, startpunt.Y, sz.Width, sz.Height);
-            s.Schets.schetsobjecten.Add(new TekstObject(tekst, startpunt, new Point(startpunt.X+(int)sz.Width, startpunt.Y+(int)sz.Height), kwast));
+            s.Schets.schetsobjecten.Add(new TekstObject(tekst, startpunt, new Point(startpunt.X+(int)sz.Width, startpunt.Y+(int)sz.Height), s.PenKleur));
             startpunt.X += (int)sz.Width;
             s.Invalidate();
         }
@@ -75,7 +75,7 @@ public abstract class TweepuntTool : StartpuntTool
     }
     public override void MuisLos(SchetsControl s, Point p)
     {   base.MuisLos(s, p);
-        s.Schets.schetsobjecten.Add(maakSchetsObject(this.startpunt, p));
+        s.Schets.schetsobjecten.Add(maakSchetsObject(this.startpunt, p, s.PenKleur));
         this.Compleet(s.MaakBitmapGraphics(), this.startpunt, p);
         s.Invalidate();
     }
@@ -83,7 +83,7 @@ public abstract class TweepuntTool : StartpuntTool
     {
     }
     public abstract void Bezig(Graphics g, Point p1, Point p2);
-    public abstract SchetsObject maakSchetsObject(Point p1, Point p2);
+    public abstract SchetsObject maakSchetsObject(Point p1, Point p2, Color col);
         
     public virtual void Compleet(Graphics g, Point p1, Point p2)
     {   this.Bezig(g, p1, p2);
@@ -98,9 +98,9 @@ public class RechthoekTool : TweepuntTool
     {   g.DrawRectangle(MaakPen(kwast,3), TweepuntTool.Punten2Rechthoek(p1, p2));
     }
 
-    public override SchetsObject maakSchetsObject(Point p1, Point p2)
+    public override SchetsObject maakSchetsObject(Point p1, Point p2, Color col)
     {
-        return new RandRechthoekObject(p1, p2, kwast);
+        return new RandRechthoekObject(p1, p2, col);
     }
 }
 
@@ -115,9 +115,9 @@ public class CirkelTool : TweepuntTool
     {
         g.DrawEllipse(MaakPen(kwast, 3), TweepuntTool.Punten2Rechthoek(p1, p2));
     }
-    public override SchetsObject maakSchetsObject(Point p1, Point p2)
+    public override SchetsObject maakSchetsObject(Point p1, Point p2, Color col)
     {
-        return new EllipsObject(p1, p2, kwast);
+        return new EllipsObject(p1, p2, col);
     }
 }
 
@@ -128,9 +128,9 @@ public class VolRechthoekTool : RechthoekTool
     public override void Compleet(Graphics g, Point p1, Point p2)
     {   g.FillRectangle(kwast, TweepuntTool.Punten2Rechthoek(p1, p2));
     }
-    public override SchetsObject maakSchetsObject(Point p1, Point p2)
+    public override SchetsObject maakSchetsObject(Point p1, Point p2, Color col)
     {
-        return new VolRechthoekObject(p1, p2, kwast);
+        return new VolRechthoekObject(p1, p2, col);
     }
 }
 
@@ -145,9 +145,9 @@ public class SchijfTool : CirkelTool
     {
         g.FillEllipse(kwast, TweepuntTool.Punten2Rechthoek(p1, p2));
     }
-    public override SchetsObject maakSchetsObject(Point p1, Point p2)
+    public override SchetsObject maakSchetsObject(Point p1, Point p2, Color col)
     {
-        return new SchijfObject(p1, p2, kwast);
+        return new SchijfObject(p1, p2, col);
     }
 }
 
@@ -158,9 +158,9 @@ public class LijnTool : TweepuntTool
     public override void Bezig(Graphics g, Point p1, Point p2)
     {   g.DrawLine(MaakPen(this.kwast,3), p1, p2);
     }
-    public override SchetsObject maakSchetsObject(Point p1, Point p2)
+    public override SchetsObject maakSchetsObject(Point p1, Point p2, Color col)
     {
-        return new LijnObject(p1, p2, kwast);
+        return new LijnObject(p1, p2, col);
     }
 }
 

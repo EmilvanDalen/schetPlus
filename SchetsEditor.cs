@@ -54,10 +54,16 @@ public class SchetsEditor : Form
         s.Text = naam;
         s.Show();
         //dit heeft een bad smell, maar ik heb per sé schetswin s nodig om een bestand te openen
-    
-        using (Image img = Image.FromFile(naam))
+        if (naam.EndsWith(".Jpg")||naam.EndsWith(".Png")||naam.EndsWith(".Bmp"))
         {
-            s.schetscontrol.schets.bitmap = new Bitmap(img);
+            using (Image img = Image.FromFile(naam))
+            {
+                s.schetscontrol.schets.bitmap = new Bitmap(img);
+            }
+        }
+        else
+        {
+            s.schetscontrol.schets.leesSchetsFile(naam);
         }
         
     }

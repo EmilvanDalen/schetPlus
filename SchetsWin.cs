@@ -42,7 +42,7 @@ public class SchetsWin : Form
     private void opslaanAls(object o, EventArgs ea)
     {
         SaveFileDialog dialoog = new SaveFileDialog();
-        dialoog.Filter = "Png|*.Png|Jpg|*.Jpg*|Bm[|*.Bmp*";
+        dialoog.Filter = "Png|*.Png|Jpg|*.Jpg*|Bmp|*.Bmp*|txt|*.txt*";
         dialoog.Title = "plaatje opslaan als...";
         if (dialoog.ShowDialog() == DialogResult.OK)
         {
@@ -52,7 +52,11 @@ public class SchetsWin : Form
     }
     private void opslaanDoorsturen(object o, EventArgs ea)
     {
-        schetscontrol.schets.opslaan(Text);
+        if (Text.EndsWith(".Jpg") || Text.EndsWith(".Png") || Text.EndsWith(".Bmp"))
+        {
+            schetscontrol.schets.BitmapOpslaan(Text);
+        }
+        else {schetscontrol.schets.LijstOpslaan(Text);  }
     }
 
     public SchetsWin()
