@@ -8,6 +8,7 @@ using static System.Net.Mime.MediaTypeNames;
 public class Schets
 {
     public Bitmap bitmap;
+    public int rotatieIn90Graden; //aantal rotaties van de bitmap mod 4
 
     public List<SchetsObject> schetsobjecten;
 
@@ -46,8 +47,18 @@ public class Schets
                                      );
         Graphics gr = Graphics.FromImage(nieuw);
         gr.FillRectangle(Brushes.White, 0, 0, this.bitmap.Size.Width, this.bitmap.Size.Height);
-        for (int i = 0; i < this.schetsobjecten.Count; i++) schetsobjecten[i].teken(gr);
+        for (int i = 0; i < this.schetsobjecten.Count; i++)
+        {
+            if (schetsobjecten[i].type == "tekst")
+            {
+                for(int j = 0; j < 4-((TekstObject)schetsobjecten[i]).rotatieIn90Graden; j++) nieuw.RotateFlip(RotateFlipType.Rotate90FlipNone);
+                schetsobjecten[i].teken(gr);
+                for (int j = 0; j < ((TekstObject)schetsobjecten[i]).rotatieIn90Graden; j++) nieuw.RotateFlip(RotateFlipType.Rotate90FlipNone);
+            }
+            else schetsobjecten[i].teken(gr);
+        }
         bitmap = nieuw;
+        for (int i = 0; i < rotatieIn90Graden; i++) { bitmap.RotateFlip(RotateFlipType.Rotate90FlipNone); }
     }
 
     public void Schoon()
@@ -56,9 +67,13 @@ public class Schets
         gr.FillRectangle(Brushes.White, 0, 0, bitmap.Width, bitmap.Height);
         schetsobjecten.Clear();
     }
-    public void Roteer()
+    public void Roteer() //deze optie is zo storend hoe roteer je een string zonder al het andere ook te roteren??????????
     {
         bitmap.RotateFlip(RotateFlipType.Rotate90FlipNone);
+        foreach (SchetsObject sobj in schetsobjecten)
+        {
+            sobj.roteer(bitmap.Size);
+        }
     }
     public void BitmapOpslaan(string naam)
     {   
@@ -99,7 +114,7 @@ public class Schets
         Color kleur = Color.FromArgb(int.Parse(infoStringLijst[5]), int.Parse(infoStringLijst[6]), int.Parse(infoStringLijst[7]));
         switch (infoStringLijst[0])
         {
-            case "tekst": return new TekstObject(infoStringLijst[8], startpunt, eindpunt, kleur);
+            case "tekst": return new TekstObject(infoStringLijst[9], startpunt, eindpunt, kleur, int.Parse(infoStringLijst[8]));
             case "lijn": return new LijnObject(startpunt, eindpunt, kleur);
             case "volRechthoek": return new VolRechthoekObject(startpunt, eindpunt, kleur);
             case "randRechthoek": return new RandRechthoekObject(startpunt, eindpunt, kleur);

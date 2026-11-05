@@ -39,7 +39,7 @@ public class TekstTool : StartpuntTool
             Graphics gr = s.MaakBitmapGraphics();
             Font font = new Font("Tahoma", 40);
             string tekst = c.ToString();
-
+            kwast = new SolidBrush(s.PenKleur);
             SizeF sz = 
             gr.MeasureString(tekst, font, this.startpunt, StringFormat.GenericTypographic);
             gr.DrawString   (tekst, font, kwast, 
@@ -188,8 +188,9 @@ public class GumTool : StartpuntTool
     }
     public override void MuisLos(SchetsControl s, Point p)
     {
+        
         int i = s.Schets.schetsobjecten.Count - 1;
-        while (i >= 0 && ! s.Schets.schetsobjecten[i].raak(p))
+        while (i >= 0 && ! s.Schets.schetsobjecten[i].raak(s, p))
         {
             i--;
         }

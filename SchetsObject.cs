@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Security.Cryptography.Pkcs;
 using System.Security.Cryptography.Xml;
 using System.Text;
 
@@ -12,7 +13,7 @@ public abstract class SchetsObject
 
     public Color kleur;
     public abstract void teken(Graphics g);
-    public abstract bool raak(Point p);
+    public abstract bool raak(SchetsControl s, Point p);
 
     public virtual string toString()
     {
@@ -26,20 +27,35 @@ public abstract class SchetsObject
         return $"{type} {x0} {y0} {x1} {y1} {r} {g} {b}";
     }
 
-    //deze roteerfunctie moet nog maar heb ik nu niet zo'n zin in
-    public void Rotate(Size schetsSize)
+    public virtual void roteer(Size sz)
     {
-        int x0 = 0;
+        int x0 = sz.Height - startpunt.Y;
+        int y0 = startpunt.X;
+        int x1 = sz.Height - eindpunt.Y;
+        int y1 = eindpunt.X;
+        startpunt = new Point(x0, y0);
+        eindpunt = new Point(x1, y1);
     }
 }
 
 public class TekstObject : SchetsObject
 {
     public string tekst;
+    public int rotatieIn90Graden = 0;
 
     public Font font;
 
     public TekstObject(string s, Point startp, Point eindp, Color col)
+    {
+        TekstObjectInitialize(s, startp, eindp, col);
+    }
+    public TekstObject(string s, Point startp, Point eindp, Color col, int r)
+    {
+        TekstObjectInitialize(s, startp, eindp, col);
+        rotatieIn90Graden = r;
+    }
+
+    public void TekstObjectInitialize(string s, Point startp, Point eindp, Color col)
     {
         tekst = s;
         this.startpunt = startp;
@@ -51,17 +67,27 @@ public class TekstObject : SchetsObject
     public override string toString()
     {
         string str = base.toString();
-        return str + " " + tekst;
+        return str + " " + $"{rotatieIn90Graden} " + tekst;
     }
     public override void teken(Graphics g)
     { 
         g.DrawString(tekst, font, new SolidBrush(kleur), this.startpunt, StringFormat.GenericTypographic);
-       
     }
 
-    public override bool raak(Point p)
+    public override bool raak(SchetsControl s, Point p)
     {
-        return TweepuntTool.Punten2Rechthoek(startpunt, eindpunt).Contains(p);
+        Point pRotated = p;
+        for (int j = 0; j < rotatieIn90Graden; j++)
+        {
+            pRotated = new Point(pRotated.Y, s.Schets.bitmap.Size.Height - pRotated.X);
+        }
+        return TweepuntTool.Punten2Rechthoek(startpunt, eindpunt).Contains(pRotated);
+    }
+
+    public override void roteer(Size sz)
+    {
+        rotatieIn90Graden++;
+        rotatieIn90Graden %= 4;
     }
 }
 
@@ -89,7 +115,7 @@ public class LijnObject : SchetsObject //De hierarchie is hier anders! Voor alle
         double c = eindpunt.X * startpunt.Y - eindpunt.Y * startpunt.X;
         return Math.Abs(dy * p.X - dx * p.Y + c) / Math.Sqrt(dy * dy + dx * dx);
     }
-    public override bool raak(Point p) 
+    public override bool raak(SchetsControl s, Point p)
     {
         return afstandTotLijn(p) < 5
             && p.X > Math.Min(startpunt.X - 5, eindpunt.X - 5) && p.X < Math.Max(startpunt.X + 5, eindpunt.X + 5)
@@ -97,16 +123,28 @@ public class LijnObject : SchetsObject //De hierarchie is hier anders! Voor alle
         //deze laatste 4 checks zijn nodig om de afstand van het lijnSTUK tot het punt klein te houden, anders zou je ook raak klikken
         //als je 200 pixels in het verlengde van een lijn zou klikken, en dat is niet de bedoeling
     }
+
 }
 public abstract class VlakObject : SchetsObject
 {
     public Point middelpunt;
     public VlakObject(Point p1, Point p2, Color col)
     {
+        punten2StartEindPunten(p1, p2);
+        kleur = col;
+    }
+
+    public void punten2StartEindPunten(Point p1, Point p2)
+    {
         startpunt = new Point(Math.Min(p1.X, p2.X), Math.Min(p1.Y, p2.Y));
         eindpunt = new Point(Math.Max(p1.X, p2.X), Math.Max(p1.Y, p2.Y));
         middelpunt = new Point((p1.X + p2.X) / 2, (p1.Y + p2.Y) / 2);
-        kleur = col;
+    }
+
+    public override void roteer(Size sz)
+    {
+        base.roteer(sz);
+        punten2StartEindPunten(startpunt, eindpunt);
     }
 }
 
@@ -119,7 +157,7 @@ public class VolRechthoekObject : VlakObject
         g.FillRectangle(new SolidBrush(kleur), TweepuntTool.Punten2Rechthoek(startpunt, eindpunt));
     }
     
-    public override bool raak(Point p)
+    public override bool raak(SchetsControl s, Point p)
     {
         return TweepuntTool.Punten2Rechthoek(startpunt, eindpunt).Contains(p);
     }
@@ -135,7 +173,7 @@ public class RandRechthoekObject : VlakObject
         g.DrawRectangle(new Pen(kleur, 3), TweepuntTool.Punten2Rechthoek(startpunt, eindpunt)); //waarom moeilijk doen als je ook Jeroen's code kan hergebruiken :)
     }
 
-    public override bool raak(Point p)
+    public override bool raak(SchetsControl s, Point p)
     {
         return TweepuntTool.Punten2Rechthoek(new Point(startpunt.X-5, startpunt.Y-5), new Point(eindpunt.X+5, eindpunt.Y+5)).Contains(p)
             && ! TweepuntTool.Punten2Rechthoek(new Point(startpunt.X + 5, startpunt.Y + 5), new Point(eindpunt.X - 5, eindpunt.Y - 5)).Contains(p);
@@ -160,7 +198,7 @@ public class SchijfObject : VlakObject
         return cx*cx+ cy*cy <= 1;
     }
 
-    public override bool raak(Point p)
+    public override bool raak(SchetsControl s, Point p)
     {
         return puntInEllips(this.middelpunt, this.eindpunt, p);
     }
@@ -176,7 +214,7 @@ public class EllipsObject : VlakObject
         g.DrawEllipse(new Pen(kleur, 3), TweepuntTool.Punten2Rechthoek(startpunt, eindpunt));
     }
 
-    public override bool raak(Point p)
+    public override bool raak(SchetsControl s, Point p)
     {
         return SchijfObject.puntInEllips(middelpunt, new Point(eindpunt.X + 5, eindpunt.Y + 5), p) 
             && !SchijfObject.puntInEllips(middelpunt, new Point(eindpunt.X - 5, eindpunt.Y - 5), p); //kijk en daarom heb ik puntInEllips gemaakt
