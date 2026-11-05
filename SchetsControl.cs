@@ -8,8 +8,14 @@ public class SchetsControl : UserControl
     public Schets schets;
     private Color penkleur;
 
+    private int pendikte;
+
     public Color PenKleur
     { get { return penkleur; }
+    }
+    public int PenDikte
+    {
+        get { return pendikte; }
     }
     public Schets Schets
     { get { return schets;   }
@@ -46,6 +52,18 @@ public class SchetsControl : UserControl
         schets.Roteer();
         this.Invalidate();
     }
+
+    public void Undo(object o, EventArgs ea)
+    {
+        schets.Undo();
+        this.Invalidate();
+    }
+
+    public void Redo(object o, EventArgs ea)
+    {
+        schets.Redo();
+        this.Invalidate();
+    }
     public void VeranderKleur(object obj, EventArgs ea)
     {   string kleurNaam = ((ComboBox)obj).Text;
         penkleur = Color.FromName(kleurNaam);
@@ -53,5 +71,15 @@ public class SchetsControl : UserControl
     public void VeranderKleurViaMenu(object obj, EventArgs ea)
     {   string kleurNaam = ((ToolStripMenuItem)obj).Text;
         penkleur = Color.FromName(kleurNaam);
+    }
+
+    public void VeranderPenDikte(object obj, EventArgs ea)
+    {
+        pendikte = int.Parse(((ComboBox)obj).Text);
+    }
+
+    public void VeranderPenDikteViaMenu(object obj, EventArgs ea)
+    {
+        pendikte = int.Parse(((ToolStripMenuItem)obj).Text);
     }
 }

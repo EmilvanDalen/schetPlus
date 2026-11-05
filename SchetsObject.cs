@@ -12,6 +12,8 @@ public abstract class SchetsObject
     public string type = "";
 
     public Color kleur;
+
+    public int pendikte = 3;
     public abstract void teken(Graphics g);
     public abstract bool raak(SchetsControl s, Point p);
 
@@ -24,7 +26,7 @@ public abstract class SchetsObject
         int r = kleur.R;
         int g = kleur.G;
         int b = kleur.B;
-        return $"{type} {x0} {y0} {x1} {y1} {r} {g} {b}";
+        return $"{type} {x0} {y0} {x1} {y1} {r} {g} {b} {pendikte}";
     }
 
     public virtual void roteer(Size sz)
@@ -36,6 +38,8 @@ public abstract class SchetsObject
         startpunt = new Point(x0, y0);
         eindpunt = new Point(x1, y1);
     }
+
+    public abstract SchetsObject Copy();
 }
 
 public class TekstObject : SchetsObject
@@ -89,23 +93,29 @@ public class TekstObject : SchetsObject
         rotatieIn90Graden++;
         rotatieIn90Graden %= 4;
     }
+
+    public override SchetsObject Copy()
+    {
+        return new TekstObject(tekst, startpunt, eindpunt, kleur);
+    }
 }
 
 public class LijnObject : SchetsObject //De hierarchie is hier anders! Voor alle tweepuntobjecten die geen lijnen zijn
     // wil je het liefst dat startpunt de linkerbovenhoek is en eindpunt de rechteronderhoek, daar is namelijk makkelijker mee te werken
     // maar bij lijnobject gaat dan waardevolle informatie verloren, dus die moet apart
 {
-    public LijnObject(Point p1, Point p2, Color col)
+    public LijnObject(Point p1, Point p2, Color col, int pdikte)
     {
         startpunt = p1;
         eindpunt = p2;
         kleur = col;
         type = "lijn";
+        pendikte = pdikte;
     }
 
     public override void teken(Graphics g)
     {
-        g.DrawLine(new Pen(kleur, 3), startpunt, eindpunt);
+        g.DrawLine(TweepuntTool.MaakPen(new SolidBrush(kleur), pendikte), startpunt, eindpunt);
     }
 
     public double afstandTotLijn(Point p) //tijd voor wiskunde! :D credits naar Wikipedia (altijd)
@@ -123,15 +133,20 @@ public class LijnObject : SchetsObject //De hierarchie is hier anders! Voor alle
         //deze laatste 4 checks zijn nodig om de afstand van het lijnSTUK tot het punt klein te houden, anders zou je ook raak klikken
         //als je 200 pixels in het verlengde van een lijn zou klikken, en dat is niet de bedoeling
     }
+    public override SchetsObject Copy()
+    {
+        return new LijnObject(startpunt, eindpunt, kleur, pendikte);
+    }
 
 }
 public abstract class VlakObject : SchetsObject
 {
     public Point middelpunt;
-    public VlakObject(Point p1, Point p2, Color col)
+    public VlakObject(Point p1, Point p2, Color col, int pdikte)
     {
         punten2StartEindPunten(p1, p2);
         kleur = col;
+        pendikte = pdikte;
     }
 
     public void punten2StartEindPunten(Point p1, Point p2)
@@ -150,7 +165,7 @@ public abstract class VlakObject : SchetsObject
 
 public class VolRechthoekObject : VlakObject
 {
-    public VolRechthoekObject(Point p1, Point p2, Color col) : base(p1, p2, col)
+    public VolRechthoekObject(Point p1, Point p2, Color col, int pdikte) : base(p1, p2, col, pdikte)
     { type = "volRechthoek"; }
     public override void teken(Graphics g)
     {
@@ -161,16 +176,20 @@ public class VolRechthoekObject : VlakObject
     {
         return TweepuntTool.Punten2Rechthoek(startpunt, eindpunt).Contains(p);
     }
+    public override SchetsObject Copy()
+    {
+        return new VolRechthoekObject(startpunt, eindpunt, kleur, pendikte);
+    }
 
 }
 
 public class RandRechthoekObject : VlakObject
 {
-    public RandRechthoekObject(Point p1, Point p2, Color col) : base(p1, p2, col)
+    public RandRechthoekObject(Point p1, Point p2, Color col, int pdikte) : base(p1, p2, col, pdikte)
     { type = "randRechthoek"; }
     public override void teken(Graphics g)
     {
-        g.DrawRectangle(new Pen(kleur, 3), TweepuntTool.Punten2Rechthoek(startpunt, eindpunt)); //waarom moeilijk doen als je ook Jeroen's code kan hergebruiken :)
+        g.DrawRectangle(TweepuntTool.MaakPen(new SolidBrush(kleur), pendikte), TweepuntTool.Punten2Rechthoek(startpunt, eindpunt)); //waarom moeilijk doen als je ook Jeroen's code kan hergebruiken :)
     }
 
     public override bool raak(SchetsControl s, Point p)
@@ -178,11 +197,15 @@ public class RandRechthoekObject : VlakObject
         return TweepuntTool.Punten2Rechthoek(new Point(startpunt.X-5, startpunt.Y-5), new Point(eindpunt.X+5, eindpunt.Y+5)).Contains(p)
             && ! TweepuntTool.Punten2Rechthoek(new Point(startpunt.X + 5, startpunt.Y + 5), new Point(eindpunt.X - 5, eindpunt.Y - 5)).Contains(p);
     }
+    public override SchetsObject Copy()
+    {
+        return new RandRechthoekObject(startpunt, eindpunt, kleur, pendikte);
+    }
 }
 
 public class SchijfObject : VlakObject
 {
-    public SchijfObject(Point p1, Point p2, Color col) : base(p1, p2, col)
+    public SchijfObject(Point p1, Point p2, Color col, int pdikte) : base(p1, p2, col, pdikte)
     { type = "schijf"; }
 
     public override void teken(Graphics g)
@@ -202,21 +225,29 @@ public class SchijfObject : VlakObject
     {
         return puntInEllips(this.middelpunt, this.eindpunt, p);
     }
+    public override SchetsObject Copy()
+    {
+        return new SchijfObject(startpunt, eindpunt, kleur, pendikte);
+    }
 }
 
 public class EllipsObject : VlakObject
 {
-    public EllipsObject(Point p1, Point p2, Color col) : base(p1, p2, col)
+    public EllipsObject(Point p1, Point p2, Color col, int pdikte) : base(p1, p2, col, pdikte)
     { type = "ellips";  }
 
     public override void teken(Graphics g)
     {
-        g.DrawEllipse(new Pen(kleur, 3), TweepuntTool.Punten2Rechthoek(startpunt, eindpunt));
+        g.DrawEllipse(TweepuntTool.MaakPen(new SolidBrush(kleur), pendikte), TweepuntTool.Punten2Rechthoek(startpunt, eindpunt));
     }
 
     public override bool raak(SchetsControl s, Point p)
     {
         return SchijfObject.puntInEllips(middelpunt, new Point(eindpunt.X + 5, eindpunt.Y + 5), p) 
             && !SchijfObject.puntInEllips(middelpunt, new Point(eindpunt.X - 5, eindpunt.Y - 5), p); //kijk en daarom heb ik puntInEllips gemaakt
+    }
+    public override SchetsObject Copy()
+    {
+        return new EllipsObject(startpunt, eindpunt, kleur, pendikte);
     }
 }

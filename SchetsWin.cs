@@ -70,7 +70,9 @@ public class SchetsWin : Form
                                 , new TekstTool()
                                 , new GumTool()
                                 };
-        String[] deKleuren = { "Black", "Red", "Green", "Blue", "Yellow", "Magenta", "Cyan" };
+        String[] deKleuren = { "Black", "Red", "Green", "Blue", "Yellow", "Magenta", "Cyan", "White"};
+        int[] deDiktes = {1, 2, 3, 4, 5, 7, 10, 20};
+
 
         this.ClientSize = new Size(700, 500);
         huidigeTool = deTools[0];
@@ -100,9 +102,9 @@ public class SchetsWin : Form
         this.Controls.Add(menuStrip);
         this.maakFileMenu();
         this.maakToolMenu(deTools);
-        this.maakActieMenu(deKleuren);
+        this.maakActieMenu(deKleuren, deDiktes);
         this.maakToolButtons(deTools);
-        this.maakActieButtons(deKleuren);
+        this.maakActieButtons(deKleuren, deDiktes);
         this.Resize += this.veranderAfmeting;
         this.veranderAfmeting(null, null);
     }
@@ -112,8 +114,8 @@ public class SchetsWin : Form
         ToolStripMenuItem menu = new ToolStripMenuItem("File");
         menu.MergeAction = MergeAction.MatchOnly;
         menu.DropDownItems.Add("Sluiten", null, this.afsluiten);
-        menu.DropDownItems.Add("opslaan", null, this.opslaan);
-        menu.DropDownItems.Add("opslaan als", null, this.opslaanAls);
+        menu.DropDownItems.Add("Opslaan", null, this.opslaan);
+        menu.DropDownItems.Add("Opslaan als", null, this.opslaanAls);
         menuStrip.Items.Add(menu);
     }
 
@@ -131,15 +133,21 @@ public class SchetsWin : Form
         menuStrip.Items.Add(menu);
     }
 
-    private void maakActieMenu(String[] kleuren)
+    private void maakActieMenu(String[] kleuren, int[] diktes)
     {   
         ToolStripMenuItem menu = new ToolStripMenuItem("Actie");
         menu.DropDownItems.Add("Clear", null, schetscontrol.Schoon );
         menu.DropDownItems.Add("Roteer", null, schetscontrol.Roteer );
+        menu.DropDownItems.Add("Undo", null, schetscontrol.Undo);
+        menu.DropDownItems.Add("Redo", null, schetscontrol.Redo);
         ToolStripMenuItem submenu = new ToolStripMenuItem("Kies kleur");
         foreach (string k in kleuren)
             submenu.DropDownItems.Add(k, null, schetscontrol.VeranderKleurViaMenu);
         menu.DropDownItems.Add(submenu);
+        ToolStripMenuItem submenu2 = new ToolStripMenuItem("Kies kleur");
+        foreach (int k in diktes)
+            submenu.DropDownItems.Add($"{k}", null, schetscontrol.VeranderPenDikteViaMenu);
+        menu.DropDownItems.Add(submenu2);
         menuStrip.Items.Add(menu);
     }
 
@@ -164,7 +172,7 @@ public class SchetsWin : Form
         }
     }
 
-    private void maakActieButtons(String[] kleuren)
+    private void maakActieButtons(String[] kleuren, int[] diktes)
     {   
         paneel = new Panel(); this.Controls.Add(paneel);
         paneel.Size = new Size(600, 24);
@@ -191,5 +199,19 @@ public class SchetsWin : Form
         foreach (string k in kleuren)
             cbb.Items.Add(k);
         cbb.SelectedIndex = 0;
+
+        Label pendikte = new Label(); paneel.Controls.Add(pendikte);
+        pendikte.Text = "Pendikte:";
+        pendikte.Location = new Point(360, 3);
+        pendikte.AutoSize = true;
+
+        ComboBox cbb2 = new ComboBox(); paneel.Controls.Add(cbb2);
+        cbb2.Location = new Point(420, 0);
+        cbb2.DropDownStyle = ComboBoxStyle.DropDownList;
+        cbb2.SelectedValueChanged += schetscontrol.VeranderPenDikte;
+        foreach (int k in diktes)
+            cbb2.Items.Add($"{k}");
+        cbb2.SelectedIndex = 0;
+
     }
 }
